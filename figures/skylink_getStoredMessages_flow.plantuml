@@ -1,0 +1,60 @@
+@startuml
+
+participant SkylinkSDK order 3
+participant WorkerThread order 2
+participant AppMainThread order 1
+
+skinparam lifelineStrategy nosolid
+
+activate AppMainThread #FFBBBB
+
+AppMainThread -> SkylinkSDK : **1.** Create a SkylinkConnection instance for the app.
+note right : SkylinkConnection.getInstance()
+
+AppMainThread -> SkylinkSDK : **2.** Initialize Skylink connection.
+note right : SkylinkConnection.init(SkylinkConfig, Context, SkylinkCallback)
+
+AppMainThread -> SkylinkSDK : **3.** Set Skylink connection listeners.
+note right
+SkylinkConnection.setLifeCycleListener(LifeCycleListener)
+SkylinkConnection.setRemotePeerListener(RemotePeerListener)
+SkylinkConnection.setMessagesListener(MessagesListener)
+end note
+
+AppMainThread -> SkylinkSDK : **4.** Initiate a Skylink room connection.
+note right
+SkylinkConnection.connectToRoom("SkylinkKeyID",
+                  "SkylinkKeySecret",
+                  "RoomName",
+                  "Username",
+                  SkylinkCallback)
+end note
+
+AppMainThread -> WorkerThread ** : Create a worker thread to wait for Skylink room connection.
+
+deactivate AppMainThread
+activate WorkerThread #FFBBBB
+
+WorkerThread -> SkylinkSDK : **4.** Query Skylink connection state periodically and wait until state becomes CONNECTED.
+note right : SkylinkConnection.getSkylinkState()
+note left
+// Wait until connected to Skylink room
+""while (mSkylinkConnection.getSkylinkState() != SkylinkState.CONNECTED) {""
+""    Thread.sleep(500);""
+""}""
+end note
+
+...After Skylink state changed to CONNECTED...
+
+WorkerThread -> AppMainThread : Post a task to main thread to set message encrypt secrets and initiate get stored messages.
+
+deactivate WorkerThread
+activate AppMainThread #FFBBBB
+
+AppMainThread -> SkylinkSDK : **5.** Set message encrypt secrets to Skylink connection.
+note right : SkylinkConnection.setEncryptSecretsMap(Map<String, String>)
+
+AppMainThread -> SkylinkSDK : **6.** Get persistent messages.
+note right : SkylinkConnection.getStoredMessages(SkylinkCallback.StoredMessages)
+
+@enduml

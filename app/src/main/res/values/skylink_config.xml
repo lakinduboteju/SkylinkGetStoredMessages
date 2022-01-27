@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="skylink_key_id">Skylink Key ID comes here</string>
+    <string name="skylink_key_secret">Skylink Key secret comes here</string>
+    <string name="skylink_room_name">example-messaging-room</string>
+    <string name="skylink_msg_encrypt_secret">@big-$ecret</string>
+</resources>
