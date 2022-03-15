@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements LifeCycleListener
     private Handler mMainThreadHandler; // Handler used to post tasks to the main/UI thread from worker threads
     private TextView mMsgsTv; // TextView to show retrieved persistent messages
     private Button mSendHiBtn; // Button to send persistent Hi message to room
+    private int nextPersistentMsgNumb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements LifeCycleListener
         mWorkerThreadPool = new WorkerThreadPool();
 
         mMainThreadHandler = new Handler(getMainLooper());
+
+        nextPersistentMsgNumb = 0;
     }
 
     @Override
@@ -155,9 +158,12 @@ public class MainActivity extends AppCompatActivity implements LifeCycleListener
                                 try { msgContent = msg.getString("data"); } catch (JSONException e) { Log.e(TAG, e.getMessage()); }
                                 try { timestamp = msg.getString("timeStamp"); } catch (JSONException e) { Log.e(TAG, e.getMessage()); }
 
+                                /*
                                 str.append('[').append(senderId).append(']').append(" : ")
                                         .append('(').append(new Date(Long.parseLong(timestamp))).append(')').append(" : ")
                                         .append('"').append(msgContent).append('"').append("\n");
+                                */
+                                str.append(msgContent).append("\n");
                             }
 
                             mMsgsTv.setText(str.toString()); // Show persistent messages in TextView
@@ -201,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements LifeCycleListener
         mSkylinkConnection.setSelectedSecretId("key1");
         mSkylinkConnection.setMessagePersist(true);
         // Send a persistent 'Hi' to everyone in Skylink room
-        mSkylinkConnection.sendServerMessage("Hi", null, new SkylinkCallback() {
+        mSkylinkConnection.sendServerMessage(Integer.toString(nextPersistentMsgNumb), null, new SkylinkCallback() {
             @Override
             public void onError(SkylinkError skylinkError, HashMap<String, Object> hashMap) {
                 Log.e(TAG, "Failed to send persistent message. " +
@@ -209,6 +215,12 @@ public class MainActivity extends AppCompatActivity implements LifeCycleListener
                 Toast.makeText(getApplicationContext(), "Send failed!", Toast.LENGTH_SHORT).show();
             }
         });
+        if (0 == nextPersistentMsgNumb) {
+            mMsgsTv.setText("Sent " + nextPersistentMsgNumb + '\n');
+        } else {
+            mMsgsTv.setText(mMsgsTv.getText() + "Sent " + nextPersistentMsgNumb + '\n');
+        }
+        nextPersistentMsgNumb++;
     }
 
     // LifeCycleListener callbacks
